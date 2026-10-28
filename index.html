@@ -9,21 +9,16 @@
 
     <title>Math AI - Assistant de mathématiques</title>
     <meta name="description" content="Résolvez des équations, factorisez et développez des expressions mathématiques étape par étape.">
-    #welcomeBtn {
-    display: block;
-    margin: 12px auto;
-    padding: 10px 18px;
-    border: 1px solid #475569;
-    border-radius: 8px;
-    background: #334155;
-    color: white;
-    cursor: pointer;
-    font-size: 14px;
-}
+    .welcome-container {
+        display: flex;
+        justify-content: center;
+        margin: 12px auto 20px;
+    }
 
-#welcomeBtn:hover {
-    background: #475569;
-}
+    #welcomeBtn {
+        display: block;
+        margin: 0;
+    }
     <style>
         * {
             box-sizing: border-box;
@@ -211,12 +206,11 @@
     <h1>Math AI</h1>
 </div>
 
-    <p class="subtitle">
-        Votre assistant pour comprendre les mathématiques
-    </p>
-    <button id="welcomeBtn" type="button">
-    🔊 Écouter l'accueil
-</button>
+    <p class="subtitle">Votre assistant pour comprendre les mathématiques</p>
+
+<div class="welcome-container">
+    <button id="welcomeBtn" type="button">🔊 Écouter l'accueil</button>
+</div>
 
     <main class="calculator">
         <h2>Calcul mathématique</h2>
