@@ -1,15 +1,50 @@
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from sympy import symbols, Eq, solve, factor, expand, sympify
+from sympy import (
+    symbols,
+    Eq,
+    solve,
+    factor,
+    expand,
+    sympify
+)
 
 app = Flask(__name__)
 CORS(app)
 
+# Variable used in the mathematical expressions
 x = symbols("x")
 
+# Limit the length of expressions sent to the API
+MAX_EXPRESSION_LENGTH = 300
 
-@app.route("/")
+
+def parse_expression(value):
+    """Validate and convert a text expression into a SymPy expression."""
+
+    if not isinstance(value, str):
+        raise ValueError("L'expression doit être du texte.")
+
+    value = value.strip()
+
+    if not value:
+        raise ValueError("Veuillez saisir une expression.")
+
+    if len(value) > MAX_EXPRESSION_LENGTH:
+        raise ValueError("L'expression est trop longue.")
+
+    # Allow x^2 to represent x**2
+    expression = sympify(
+        value,
+        locals={"x": x},
+        convert_xor=True
+    )
+
+    return expression
+
+
+@app.route("/", methods=["GET"])
 def home():
     return "Math Assistant API is running!"
 
@@ -17,67 +52,86 @@ def home():
 @app.route("/api/calculate", methods=["POST"])
 def calculate():
     try:
-        data = request.get_json(force=True)
+        data = request.get_json(silent=True)
+
+        if not isinstance(data, dict):
+            return jsonify({
+                "success": False,
+                "error": "Les données envoyées sont invalides.",
+                "steps": []
+            }), 400
+
         mode = data.get("mode", "")
 
+        # Solve an equation
         if mode == "equation":
-            left = sympify(data.get("left", ""), locals={"x": x})
-            right = sympify(data.get("right", ""), locals={"x": x})
-            solutions = solve(Eq(left, right), x)
+            left = parse_expression(data.get("left", ""))
+            right = parse_expression(data.get("right", ""))
+
+            equation = Eq(left, right)
+            solutions = solve(equation, x)
 
             return jsonify({
                 "success": True,
-                "title": "حل المعادلة",
-                "answer": [str(s) for s in solutions],
+                "title": "Résolution de l'équation",
+                "answer": [str(solution) for solution in solutions],
                 "steps": [
-                    f"الطرف الأيسر: {left}",
-                    f"الطرف الأيمن: {right}",
-                    f"الحلول: {solutions}"
+                    f"Membre de gauche : {left}",
+                    f"Membre de droite : {right}",
+                    f"Équation obtenue : {equation}",
+                    f"Solutions : {solutions}"
                 ]
             })
 
+        # Factor an expression
         elif mode == "factor":
-            expression = sympify(
-                data.get("expression", ""), locals={"x": x}
+            expression = parse_expression(
+                data.get("expression", "")
             )
+
             result = factor(expression)
 
             return jsonify({
                 "success": True,
-                "title": "تحليل التعبير",
+                "title": "Factorisation",
                 "answer": str(result),
                 "steps": [
-                    f"التعبير الأصلي: {expression}",
-                    f"بعد التحليل: {result}"
+                    f"Expression initiale : {expression}",
+                    f"Expression factorisée : {result}"
                 ]
             })
 
+        # Expand an expression
         elif mode == "expand":
-            expression = sympify(
-                data.get("expression", ""), locals={"x": x}
+            expression = parse_expression(
+                data.get("expression", "")
             )
+
             result = expand(expression)
 
             return jsonify({
                 "success": True,
-                "title": "نشر التعبير",
+                "title": "Développement",
                 "answer": str(result),
                 "steps": [
-                    f"التعبير الأصلي: {expression}",
-                    f"بعد النشر: {result}"
+                    f"Expression initiale : {expression}",
+                    f"Expression développée : {result}"
                 ]
             })
 
         return jsonify({
             "success": False,
-            "error": "عملية غير معروفة",
+            "error": "Opération inconnue. Choisissez une opération valide.",
             "steps": []
         }), 400
 
     except Exception:
         return jsonify({
             "success": False,
-            "error": "تعذر معالجة التعبير. تحقق من كتابته.",
+            "error": (
+                "Impossible de traiter cette expression. "
+                "Vérifiez sa syntaxe mathématique."
+            ),
             "steps": []
         }), 400
 
