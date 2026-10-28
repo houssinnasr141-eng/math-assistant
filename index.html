@@ -2,24 +2,15 @@
 <!DOCTYPE html>
 <html lang="fr" dir="ltr">
 <head>
-    <link rel="icon" type="image/png" href="math-ai-logo.png">
-    <meta name="google-site-verification" content="TG9xWDJdcz7mBLyU8aO88COJNal7o5EZq8_Ptm7pCxA">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/png" href="math-ai-logo.png">
 
+    <meta name="google-site-verification" content="TG9xWDJdcz7mBLyU8aO88COJNal7o5EZq8_Ptm7pCxA">
     <title>Math AI - Assistant de mathématiques</title>
-    <meta name="description" content="Résolvez des équations, factorisez et développez des expressions mathématiques étape par étape.">
-    <style>
-        .welcome-container {
-        display: flex;
-        justify-content: center;
-        margin: 12px auto 20px;
-    }
+    <meta name="description" content="Résolvez des équations, des inéquations, factorisez et développez des expressions mathématiques.">
 
-    #welcomeBtn {
-        display: block;
-        margin: 0;
-    }
+    <style>
         * {
             box-sizing: border-box;
         }
@@ -32,17 +23,42 @@
             color: white;
         }
 
-        h1, .subtitle {
-            text-align: center;
+        .brand {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 10px;
         }
 
-        h1 {
-            margin-bottom: 10px;
+        .brand img {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+        }
+
+        .brand h1 {
+            margin: 0;
+        }
+
+        h1, .subtitle {
+            text-align: center;
         }
 
         .subtitle {
             color: #cbd5e1;
             line-height: 1.6;
+        }
+
+        .welcome-container {
+            display: flex;
+            justify-content: center;
+            margin: 12px auto 20px;
+        }
+
+        #welcomeBtn {
+            display: block;
+            margin: 0;
         }
 
         .calculator {
@@ -55,7 +71,7 @@
 
         .tabs, .buttons {
             display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
+            grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 9px;
             margin: 18px 0;
         }
@@ -75,8 +91,7 @@
             background: #475569;
         }
 
-        button:focus-visible,
-        input:focus-visible {
+        button:focus-visible, input:focus-visible {
             outline: 2px solid #60a5fa;
             outline-offset: 2px;
         }
@@ -180,37 +195,27 @@
                 padding: 11px 5px;
             }
         }
-           .brand {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            margin-bottom: 10px;
-        }
-
-        .brand img {
-            width: 60px;
-            height: 60px;
-            object-fit: contain;
-        }
-
-        .brand h1 {
-            margin: 0;
-        }
     </style>
 </head>
 
 <body>
     <div class="brand">
-    <img src="Logo%20Math%20AI%20futuriste%20sur%20fond%20sombre.png" alt="Logo Math AI">
-    <h1>Math AI</h1>
-</div>
+        <img
+            src="Logo%20Math%20AI%20futuriste%20sur%20fond%20sombre.png"
+            alt="Logo Math AI"
+        >
+        <h1>Math AI</h1>
+    </div>
 
-    <p class="subtitle">Votre assistant pour comprendre les mathématiques</p>
+    <p class="subtitle">
+        Votre assistant pour comprendre les mathématiques
+    </p>
 
-<div class="welcome-container">
-    <button id="welcomeBtn" type="button">🔊 Écouter l'accueil</button>
-</div>
+    <div class="welcome-container">
+        <button id="welcomeBtn" type="button">
+            🔊 Écouter l'accueil
+        </button>
+    </div>
 
     <main class="calculator">
         <h2>Calcul mathématique</h2>
@@ -220,12 +225,16 @@
                 Résoudre une équation
             </button>
 
+            <button type="button" data-mode="inequality">
+                Résoudre une inéquation
+            </button>
+
             <button type="button" data-mode="factor">
-                Factoriser
+                Factorisation
             </button>
 
             <button type="button" data-mode="expand">
-                Développer
+                Développement
             </button>
         </div>
 
@@ -247,6 +256,20 @@
                 autocomplete="off"
                 spellcheck="false"
             >
+        </section>
+
+        <section id="inequalityFields" hidden>
+            <label for="inequalityExpr">Votre inéquation</label>
+            <input
+                id="inequalityExpr"
+                type="text"
+                placeholder="Exemple : 3*x - 5 > 7"
+                autocomplete="off"
+                spellcheck="false"
+            >
+            <p class="hint">
+                Utilisez &lt;, &gt;, &lt;= ou &gt;= pour comparer les expressions.
+            </p>
         </section>
 
         <section id="expressionFields" hidden>
@@ -301,11 +324,16 @@
         let lastFocusedInput = null;
 
         const tabs = document.querySelectorAll("[data-mode]");
+
         const leftInput = document.getElementById("leftExpr");
         const rightInput = document.getElementById("rightExpr");
+        const inequalityInput = document.getElementById("inequalityExpr");
         const expressionInput = document.getElementById("expression");
+
         const equationFields = document.getElementById("equationFields");
+        const inequalityFields = document.getElementById("inequalityFields");
         const expressionFields = document.getElementById("expressionFields");
+
         const resultBox = document.getElementById("result");
         const resultTitle = document.getElementById("resultTitle");
         const answerBox = document.getElementById("answer");
@@ -314,7 +342,8 @@
         const calculateBtn = document.getElementById("calculateBtn");
 
         const modeLabels = {
-            equation: "Calculer",
+            equation: "Résoudre l'équation",
+            inequality: "Résoudre l'inéquation",
             factor: "Factoriser l'expression",
             expand: "Développer l'expression"
         };
@@ -337,13 +366,13 @@
             });
 
             equationFields.hidden = mode !== "equation";
-            expressionFields.hidden = mode === "equation";
+            inequalityFields.hidden = mode !== "inequality";
+            expressionFields.hidden =
+                mode === "equation" || mode === "inequality";
 
-            calculateBtn.textContent = modeLabels[mode];
+            calculateBtn.textContent = modeLabels[mode] || "Calculer";
 
             hideResult();
-
-            // Ne remplit aucune expression automatiquement.
         }
 
         tabs.forEach(button => {
@@ -369,19 +398,15 @@
                 return lastFocusedInput;
             }
 
-            if (mode === "equation") {
-                return leftInput;
-            }
+            if (mode === "equation") return leftInput;
+            if (mode === "inequality") return inequalityInput;
 
             return expressionInput;
         }
 
         function insertText(text) {
             const input = getActiveInput();
-
-            if (!input) {
-                return;
-            }
+            if (!input) return;
 
             const start = input.selectionStart ?? input.value.length;
             const end = input.selectionEnd ?? input.value.length;
@@ -401,9 +426,7 @@
         function showSteps(steps) {
             stepsBox.replaceChildren();
 
-            if (!Array.isArray(steps)) {
-                return;
-            }
+            if (!Array.isArray(steps)) return;
 
             steps.forEach(step => {
                 const line = document.createElement("p");
@@ -432,6 +455,21 @@
                     left: left,
                     right: right
                 };
+
+            } else if (mode === "inequality") {
+                const expression = inequalityInput.value.trim();
+
+                if (!expression) {
+                    statusBox.textContent =
+                        "Veuillez saisir une inéquation.";
+                    return;
+                }
+
+                data = {
+                    mode: "inequality",
+                    expression: expression
+                };
+
             } else {
                 const expression = expressionInput.value.trim();
 
@@ -489,6 +527,7 @@
                 }
 
                 showSteps(result.steps);
+
             } catch (error) {
                 resultTitle.textContent = "Erreur";
                 answerBox.textContent = "Calcul impossible.";
@@ -500,6 +539,7 @@
                     "Impossible de contacter le serveur.";
 
                 stepsBox.appendChild(message);
+
             } finally {
                 calculateBtn.disabled = false;
             }
@@ -507,37 +547,40 @@
 
         calculateBtn.addEventListener("click", calculate);
 
-        // Le site s'ouvre avec des champs vides et sans calcul automatique.
-        
-const welcomeText =
-    "Bonjour et bienvenue sur Math AI ! " +
-    "Votre assistant intelligent pour les mathématiques.";
+        document.querySelectorAll("input").forEach(input => {
+            input.addEventListener("keydown", event => {
+                if (event.key === "Enter") calculate();
+            });
+        });
 
-function speakWelcome() {
-    if (!("speechSynthesis" in window)) {
-        alert("La synthèse vocale n'est pas disponible dans ce navigateur.");
-        return;
-    }
+        const welcomeText =
+            "Bonjour et bienvenue sur Math AI ! " +
+            "Votre assistant intelligent pour les mathématiques.";
 
-    window.speechSynthesis.cancel();
+        function speakWelcome() {
+            if (!("speechSynthesis" in window)) {
+                alert(
+                    "La synthèse vocale n'est pas disponible dans ce navigateur."
+                );
+                return;
+            }
 
-    const message = new SpeechSynthesisUtterance(welcomeText);
-    message.lang = "fr-FR";
-    message.rate = 0.9;
-    message.pitch = 1.0;
-    message.volume = 1;
+            window.speechSynthesis.cancel();
 
-    window.speechSynthesis.speak(message);
-}
+            const message = new SpeechSynthesisUtterance(welcomeText);
+            message.lang = "fr-FR";
+            message.rate = 0.9;
+            message.pitch = 1.0;
+            message.volume = 1;
 
-document.getElementById("welcomeBtn")
-    .addEventListener("click", speakWelcome);
+            window.speechSynthesis.speak(message);
+        }
 
-// Attempt automatic playback when the page opens.
-window.addEventListener("load", () => {
-    setTimeout(speakWelcome, 500);
-});
+        document.getElementById("welcomeBtn")
+            .addEventListener("click", speakWelcome);
 
+        // Les champs restent vides au chargement.
+        // La lecture vocale démarre uniquement après un clic.
     </script>
 </body>
 </html>
