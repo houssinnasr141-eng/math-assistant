@@ -14,32 +14,72 @@ def home():
     return "Math Assistant API is running!"
 
 
-@app.route("/api", methods=["POST"])
+@app.route("/api/calculate", methods=["POST"])
 def calculate():
     try:
         data = request.get_json(force=True)
-
         mode = data.get("mode", "")
-        expression = data.get("expression", "")
 
         if mode == "equation":
-            left = sympify(data["left"])
-            right = sympify(data["right"])
-            result = solve(Eq(left, right), x)
+            left = sympify(data.get("left", ""), locals={"x": x})
+            right = sympify(data.get("right", ""), locals={"x": x})
+            solutions = solve(Eq(left, right), x)
+
+            return jsonify({
+                "success": True,
+                "title": "حل المعادلة",
+                "answer": [str(s) for s in solutions],
+                "steps": [
+                    f"الطرف الأيسر: {left}",
+                    f"الطرف الأيمن: {right}",
+                    f"الحلول: {solutions}"
+                ]
+            })
 
         elif mode == "factor":
-            result = factor(sympify(expression))
+            expression = sympify(
+                data.get("expression", ""), locals={"x": x}
+            )
+            result = factor(expression)
+
+            return jsonify({
+                "success": True,
+                "title": "تحليل التعبير",
+                "answer": str(result),
+                "steps": [
+                    f"التعبير الأصلي: {expression}",
+                    f"بعد التحليل: {result}"
+                ]
+            })
 
         elif mode == "expand":
-            result = expand(sympify(expression))
+            expression = sympify(
+                data.get("expression", ""), locals={"x": x}
+            )
+            result = expand(expression)
 
-        else:
-            return jsonify({"error": "Unknown operation"}), 400
+            return jsonify({
+                "success": True,
+                "title": "نشر التعبير",
+                "answer": str(result),
+                "steps": [
+                    f"التعبير الأصلي: {expression}",
+                    f"بعد النشر: {result}"
+                ]
+            })
 
-        return jsonify({"result": str(result)})
+        return jsonify({
+            "success": False,
+            "error": "عملية غير معروفة",
+            "steps": []
+        }), 400
 
-    except Exception as error:
-        return jsonify({"error": str(error)}), 400
+    except Exception:
+        return jsonify({
+            "success": False,
+            "error": "تعذر معالجة التعبير. تحقق من كتابته.",
+            "steps": []
+        }), 400
 
 
 if __name__ == "__main__":
