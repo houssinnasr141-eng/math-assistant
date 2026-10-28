@@ -2,12 +2,8 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from sympy import (
-    symbols,
-    Eq,
-    solve,
-    factor,
-    expand,
-    sympify
+    symbols, Eq, solve, factor, expand, sympify,
+    solve_univariate_inequality
 )
 
 app = Flask(__name__)
@@ -83,7 +79,28 @@ def calculate():
                 ]
             })
 
-        # Factor an expression
+                elif mode == "inequality":
+            expression = sympify(
+                data.get("expression", ""),
+                locals={"x": x},
+                convert_xor=True
+            )
+
+            result = solve_univariate_inequality(
+                expression,
+                x,
+                relational=False
+            )
+
+            return jsonify({
+                "success": True,
+                "title": "Résolution de l'inéquation",
+                "answer": str(result),
+                "steps": [
+                    f"Inéquation saisie : {expression}",
+                    f"Ensemble des solutions : {result}"
+                ]
+            })
         elif mode == "factor":
             expression = parse_expression(
                 data.get("expression", "")
