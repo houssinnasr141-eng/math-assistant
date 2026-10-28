@@ -2,22 +2,27 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from sympy import (
-    symbols, Eq, solve, factor, expand, sympify,
+    symbols,
+    Eq,
+    solve,
+    factor,
+    expand,
+    sympify,
     solve_univariate_inequality
 )
 
 app = Flask(__name__)
 CORS(app)
 
-# Variable used in the mathematical expressions
+# Variable used in mathematical expressions
 x = symbols("x")
 
-# Limit the length of expressions sent to the API
+# Maximum allowed expression length
 MAX_EXPRESSION_LENGTH = 300
 
 
 def parse_expression(value):
-    """Validate and convert a text expression into a SymPy expression."""
+    """Validate and convert text into a SymPy expression."""
 
     if not isinstance(value, str):
         raise ValueError("L'expression doit être du texte.")
@@ -30,14 +35,11 @@ def parse_expression(value):
     if len(value) > MAX_EXPRESSION_LENGTH:
         raise ValueError("L'expression est trop longue.")
 
-    # Allow x^2 to represent x**2
-    expression = sympify(
+    return sympify(
         value,
         locals={"x": x},
         convert_xor=True
     )
-
-    return expression
 
 
 @app.route("/", methods=["GET"])
@@ -59,7 +61,7 @@ def calculate():
 
         mode = data.get("mode", "")
 
-        # Solve an equation
+        # 1. Solve an equation
         if mode == "equation":
             left = parse_expression(data.get("left", ""))
             right = parse_expression(data.get("right", ""))
@@ -79,17 +81,22 @@ def calculate():
                 ]
             })
 
-                elif mode == "inequality":
-            expression = sympify(
-                data.get("expression", ""),
-                locals={"x": x},
-                convert_xor=True
+        # 2. Solve an inequality
+        elif mode == "inequality":
+            expression = parse_expression(
+                data.get("expression", "")
             )
+
+            # The input must be a relational inequality.
+            if not getattr(expression, "is_Relational", False):
+                raise ValueError(
+                    "Saisissez une inéquation avec <, >, <= ou >=."
+                )
 
             result = solve_univariate_inequality(
                 expression,
                 x,
-                relational=False
+                relational=True
             )
 
             return jsonify({
@@ -101,6 +108,8 @@ def calculate():
                     f"Ensemble des solutions : {result}"
                 ]
             })
+
+        # 3. Factor an expression
         elif mode == "factor":
             expression = parse_expression(
                 data.get("expression", "")
@@ -118,7 +127,7 @@ def calculate():
                 ]
             })
 
-        # Expand an expression
+        # 4. Expand an expression
         elif mode == "expand":
             expression = parse_expression(
                 data.get("expression", "")
@@ -147,7 +156,7 @@ def calculate():
             "success": False,
             "error": (
                 "Impossible de traiter cette expression. "
-                "Vérifiez sa syntaxe mathématique."
+                "Vérifiez sa syntaxe mathématique et les signes utilisés."
             ),
             "steps": []
         }), 400
