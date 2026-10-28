@@ -2,10 +2,12 @@
 <!DOCTYPE html>
 <html lang="fr" dir="ltr">
 <head>
-    <meta name="google-site-verification" content="TG9xWDJdcz7mBLyU8aO88COJNal7o5EZq8_Ptm7pCxA" />
+    <meta name="google-site-verification" content="TG9xWDJdcz7mBLyU8aO88COJNal7o5EZq8_Ptm7pCxA">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Math AI</title>
+
+    <title>Math AI - Assistant de mathématiques</title>
+    <meta name="description" content="Résolvez des équations, factorisez et développez des expressions mathématiques étape par étape.">
 
     <style>
         * {
@@ -24,12 +26,17 @@
             text-align: center;
         }
 
+        h1 {
+            margin-bottom: 10px;
+        }
+
         .subtitle {
             color: #cbd5e1;
+            line-height: 1.6;
         }
 
         .calculator {
-            max-width: 600px;
+            max-width: 650px;
             margin: 30px auto;
             padding: 25px;
             background: #1e293b;
@@ -38,27 +45,39 @@
 
         .tabs, .buttons {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 9px;
-            margin: 15px 0;
+            margin: 18px 0;
         }
 
         button {
-            padding: 12px;
+            padding: 12px 8px;
             border: 0;
             border-radius: 8px;
             background: #334155;
             color: white;
-            font-size: 16px;
+            font-size: 15px;
             cursor: pointer;
+            overflow-wrap: anywhere;
         }
 
         button:hover {
             background: #475569;
         }
 
+        button:focus-visible,
+        input:focus-visible {
+            outline: 2px solid #60a5fa;
+            outline-offset: 2px;
+        }
+
         button.active, .primary {
             background: #2563eb;
+        }
+
+        button:disabled {
+            opacity: 0.65;
+            cursor: wait;
         }
 
         label {
@@ -77,6 +96,10 @@
             direction: ltr;
         }
 
+        input::placeholder {
+            color: #94a3b8;
+        }
+
         .primary {
             width: 100%;
             margin-top: 15px;
@@ -88,6 +111,7 @@
             padding: 17px;
             border-radius: 10px;
             background: #0f172a;
+            overflow-wrap: anywhere;
         }
 
         .result.show {
@@ -104,8 +128,12 @@
         }
 
         #steps {
-            line-height: 1.9;
+            line-height: 1.8;
             overflow-wrap: anywhere;
+        }
+
+        #steps p {
+            margin: 8px 0;
         }
 
         .hint {
@@ -114,145 +142,287 @@
             line-height: 1.7;
         }
 
+        .status {
+            color: #cbd5e1;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
         [hidden] {
             display: none !important;
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 16px 10px;
+            }
+
+            .calculator {
+                padding: 17px;
+            }
+
+            .tabs, .buttons {
+                gap: 6px;
+            }
+
+            button {
+                font-size: 13px;
+                padding: 11px 5px;
+            }
         }
     </style>
 </head>
 
 <body>
-
     <h1>Math AI ∑</h1>
-    <p class="subtitle">Votre assistant pour comprendre les mathématiques</p>
+
+    <p class="subtitle">
+        Votre assistant pour comprendre les mathématiques
+    </p>
 
     <main class="calculator">
+        <h2>Calcul mathématique</h2>
 
-        <h2>Le rédacteur sportif</h2>
-
-        <div class="tabs">
-            <button class="active" data-mode="equation">
-                Résoudre l'équation
+        <div class="tabs" role="group" aria-label="Outils mathématiques">
+            <button type="button" class="active" data-mode="equation">
+                Résoudre une équation
             </button>
 
-            <button data-mode="factor">
-                factorisation
+            <button type="button" data-mode="factor">
+                Factoriser
             </button>
 
-            <button data-mode="expand">
-                developpement
+            <button type="button" data-mode="expand">
+                Développer
             </button>
         </div>
 
         <section id="equationFields">
-            <label for="left">Le côté gauche</label>
-            <input id="leftExpr" value="" placeholder="Saisissez le membre de gauche">
+            <label for="leftExpr">Membre de gauche</label>
+            <input
+                id="leftExpr"
+                type="text"
+                placeholder="Saisissez le membre de gauche"
+                autocomplete="off"
+                spellcheck="false"
+            >
 
-            <label for="right">Le côté droit</label>
-            <input id="rightExpr" value="" placeholder="Saisissez le membre de droite">
+            <label for="rightExpr">Membre de droite</label>
+            <input
+                id="rightExpr"
+                type="text"
+                placeholder="Saisissez le membre de droite"
+                autocomplete="off"
+                spellcheck="false"
+            >
         </section>
 
         <section id="expressionFields" hidden>
-            <label for="expression">L'expression mathématique</label>
-            <input id="expression" value="" placeholder="Saisissez une expression">
+            <label for="expression">Expression mathématique</label>
+            <input
+                id="expression"
+                type="text"
+                placeholder="Saisissez une expression"
+                autocomplete="off"
+                spellcheck="false"
+            >
         </section>
 
-        <div class="buttons">
-            <button onclick="insertText('sqrt(')">√</button>
-            <button onclick="insertText('^2')">x²</button>
-            <button onclick="insertText('x')">x</button>
-            <button onclick="insertText('+')">+</button>
-            <button onclick="insertText('-')">−</button>
-            <button onclick="insertText('*')">×</button>
-            <button onclick="insertText('/')">÷</button>
-            <button onclick="insertText('(')">(</button>
-            <button onclick="insertText(')')">)</button>
+        <div class="buttons" aria-label="Clavier mathématique">
+            <button type="button" data-insert="sqrt(">√</button>
+            <button type="button" data-insert="^2">x²</button>
+            <button type="button" data-insert="x">x</button>
+            <button type="button" data-insert="+">+</button>
+            <button type="button" data-insert="-">−</button>
+            <button type="button" data-insert="*">×</button>
+            <button type="button" data-insert="/">÷</button>
+            <button type="button" data-insert="(">(</button>
+            <button type="button" data-insert=")">)</button>
         </div>
 
-        <button class="primary" id="calculateBtn">
-            Calculez maintenant
+        <button type="button" class="primary" id="calculateBtn">
+            Calculer
         </button>
 
         <p class="hint">
-            اكتب الضرب باستخدام *، مثل 5*x.
-            يمكنك استخدام ^ للأسس و sqrt(25) للجذر.
+            Utilisez * pour la multiplication, ^ pour les puissances
+            et sqrt(25) pour la racine carrée.
+            Exemple : 5*x ou x^2 - 9.
         </p>
 
         <section id="result" class="result" aria-live="polite">
-            <h3 id="resultTitle">la resultat</h3>
+            <h3 id="resultTitle">Résultat</h3>
             <div id="answer" class="answer"></div>
             <div id="steps"></div>
         </section>
 
+        <p id="status" class="status" role="status"></p>
     </main>
 
     <script>
+        "use strict";
+
+        const API_URL =
+            "https://math-assistant-api.onrender.com/api/calculate";
+
         let mode = "equation";
+        let lastFocusedInput = null;
 
         const tabs = document.querySelectorAll("[data-mode]");
+        const leftInput = document.getElementById("leftExpr");
+        const rightInput = document.getElementById("rightExpr");
+        const expressionInput = document.getElementById("expression");
+        const equationFields = document.getElementById("equationFields");
+        const expressionFields = document.getElementById("expressionFields");
+        const resultBox = document.getElementById("result");
+        const resultTitle = document.getElementById("resultTitle");
+        const answerBox = document.getElementById("answer");
+        const stepsBox = document.getElementById("steps");
+        const statusBox = document.getElementById("status");
+        const calculateBtn = document.getElementById("calculateBtn");
+
+        const modeLabels = {
+            equation: "Calculer",
+            factor: "Factoriser l'expression",
+            expand: "Développer l'expression"
+        };
+
+        function hideResult() {
+            resultBox.classList.remove("show");
+            answerBox.textContent = "";
+            stepsBox.replaceChildren();
+            statusBox.textContent = "";
+        }
+
+        function setMode(newMode) {
+            mode = newMode;
+
+            tabs.forEach(button => {
+                button.classList.toggle(
+                    "active",
+                    button.dataset.mode === mode
+                );
+            });
+
+            equationFields.hidden = mode !== "equation";
+            expressionFields.hidden = mode === "equation";
+
+            calculateBtn.textContent = modeLabels[mode];
+
+            hideResult();
+
+            // Ne remplit aucune expression automatiquement.
+        }
 
         tabs.forEach(button => {
             button.addEventListener("click", () => {
-                mode = button.dataset.mode;
-
-                tabs.forEach(tab => {
-                    tab.classList.toggle(
-                        "active",
-                        tab.dataset.mode === mode
-                    );
-                });
-
-                document.getElementById("equationFields").hidden =
-                    mode !== "equation";
-
-                document.getElementById("expressionFields").hidden =
-                    mode === "equation";
-
-                document.getElementById("result").classList.remove("show");
-
-                if (mode === "factor") {
-                    document.getElementById("expression").value = "x^2 - 9";
-                }
-
-                if (mode === "expand") {
-                    document.getElementById("expression").value = "(x + 2)^2";
-                }
+                setMode(button.dataset.mode);
             });
         });
 
-        function insertText(text) {
-            const input = mode === "equation"
-                ? document.getElementById("left")
-                : document.getElementById("expression");
+        document.querySelectorAll("input").forEach(input => {
+            input.addEventListener("focus", () => {
+                lastFocusedInput = input;
+            });
 
-            const start = input.selectionStart;
-            const end = input.selectionEnd;
+            input.addEventListener("input", hideResult);
+        });
+
+        function getActiveInput() {
+            if (
+                lastFocusedInput &&
+                !lastFocusedInput.closest("[hidden]") &&
+                document.activeElement === lastFocusedInput
+            ) {
+                return lastFocusedInput;
+            }
+
+            if (mode === "equation") {
+                return leftInput;
+            }
+
+            return expressionInput;
+        }
+
+        function insertText(text) {
+            const input = getActiveInput();
+
+            if (!input) {
+                return;
+            }
+
+            const start = input.selectionStart ?? input.value.length;
+            const end = input.selectionEnd ?? input.value.length;
 
             input.setRangeText(text, start, end, "end");
             input.focus();
+            lastFocusedInput = input;
+            hideResult();
+        }
+
+        document.querySelectorAll("[data-insert]").forEach(button => {
+            button.addEventListener("click", () => {
+                insertText(button.dataset.insert);
+            });
+        });
+
+        function showSteps(steps) {
+            stepsBox.replaceChildren();
+
+            if (!Array.isArray(steps)) {
+                return;
+            }
+
+            steps.forEach(step => {
+                const line = document.createElement("p");
+                line.textContent = String(step);
+                stepsBox.appendChild(line);
+            });
         }
 
         async function calculate() {
-            const resultBox = document.getElementById("result");
-            const answerBox = document.getElementById("answer");
-            const stepsBox = document.getElementById("steps");
+            hideResult();
 
-            let data = { mode };
+            let data;
 
             if (mode === "equation") {
-                data.left = document.getElementById("left").value;
-                data.right = document.getElementById("right").value;
+                const left = leftInput.value.trim();
+                const right = rightInput.value.trim();
+
+                if (!left || !right) {
+                    statusBox.textContent =
+                        "Veuillez remplir les deux membres de l'équation.";
+                    return;
+                }
+
+                data = {
+                    mode: "equation",
+                    left: left,
+                    right: right
+                };
             } else {
-                data.expression =
-                    document.getElementById("expression").value;
+                const expression = expressionInput.value.trim();
+
+                if (!expression) {
+                    statusBox.textContent =
+                        "Veuillez saisir une expression mathématique.";
+                    return;
+                }
+
+                data = {
+                    mode: mode,
+                    expression: expression
+                };
             }
 
+            calculateBtn.disabled = true;
             resultBox.classList.add("show");
-            document.getElementById("resultTitle").textContent = "النتيجة";
+            resultTitle.textContent = "Résultat";
             answerBox.textContent = "Calcul en cours...";
-            stepsBox.textContent = "";
+            statusBox.textContent = "";
 
             try {
-                const response = await fetch("https://math-assistant-api.onrender.com/api/calculate", {
+                const response = await fetch(API_URL, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"
@@ -260,38 +430,52 @@
                     body: JSON.stringify(data)
                 });
 
-                const result = await response.json();
+                let result;
 
-                if (!response.ok || !result.success) {
-                    throw new Error(result.error || "Une erreur est survenue.");
+                try {
+                    result = await response.json();
+                } catch {
+                    throw new Error(
+                        "Le serveur a renvoyé une réponse invalide."
+                    );
                 }
 
-                document.getElementById("resultTitle").textContent =
-                    result.title;
+                if (!response.ok || !result.success) {
+                    throw new Error(
+                        result.error || "Une erreur est survenue."
+                    );
+                }
 
-                answerBox.textContent = Array.isArray(result.answer)
-                    ? result.answer.length
-                        ? result.answer.map(s => "x = " + s).join(" ، ")
-                        : "Il n'y a pas de solutions."
-                    : result.answer;
+                resultTitle.textContent = result.title || "Résultat";
 
-                result.steps.forEach(step => {
-                    const line = document.createElement("p");
-                    line.textContent = step;
-                    stepsBox.appendChild(line);
-                });
+                if (Array.isArray(result.answer)) {
+                    answerBox.textContent = result.answer.length
+                        ? result.answer.map(s => "x = " + s).join(" ; ")
+                        : "Aucune solution trouvée.";
+                } else {
+                    answerBox.textContent = String(result.answer ?? "");
+                }
 
+                showSteps(result.steps);
             } catch (error) {
-                answerBox.textContent = "Impossibilité du calcul";
-                stepsBox.textContent =
-                    error.message +
-                    " Assurez-vous que le serveur est en cours d'exécution. Python.";
+                resultTitle.textContent = "Erreur";
+                answerBox.textContent = "Calcul impossible.";
+                stepsBox.replaceChildren();
+
+                const message = document.createElement("p");
+                message.textContent =
+                    error.message ||
+                    "Impossible de contacter le serveur.";
+
+                stepsBox.appendChild(message);
+            } finally {
+                calculateBtn.disabled = false;
             }
         }
 
-        document.getElementById("calculateBtn")
-            .addEventListener("click", calculate);
-    </script>
+        calculateBtn.addEventListener("click", calculate);
 
+        // Le site s'ouvre avec des champs vides et sans calcul automatique.
+    </script>
 </body>
 </html>
