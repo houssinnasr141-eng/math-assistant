@@ -1,6 +1,6 @@
 
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="fr" dir="ltr">
 <head>
     <meta name="google-site-verification" content="TG9xWDJdcz7mBLyU8aO88COJNal7o5EZq8_Ptm7pCxA" />
     <meta charset="UTF-8">
@@ -123,36 +123,36 @@
 <body>
 
     <h1>Math AI ∑</h1>
-    <p class="subtitle">مساعدك في فهم الرياضيات</p>
+    <p class="subtitle">Votre assistant pour comprendre les mathématiques</p>
 
     <main class="calculator">
 
-        <h2>المحرر الرياضي</h2>
+        <h2>Le rédacteur sportif</h2>
 
         <div class="tabs">
             <button class="active" data-mode="equation">
-                حل معادلة
+                Résoudre l'équation
             </button>
 
             <button data-mode="factor">
-                تحليل
+                factorisation
             </button>
 
             <button data-mode="expand">
-                نشر
+                developpement
             </button>
         </div>
 
         <section id="equationFields">
-            <label for="left">الطرف الأيسر</label>
+            <label for="left">Le côté gauche</label>
             <input id="leftExpr" value="" placeholder="Saisissez le membre de gauche">
 
-            <label for="right">الطرف الأيمن</label>
+            <label for="right">Le côté droit</label>
             <input id="rightExpr" value="" placeholder="Saisissez le membre de droite">
         </section>
 
         <section id="expressionFields" hidden>
-            <label for="expression">التعبير الرياضي</label>
+            <label for="expression">L'expression mathématique</label>
             <input id="expression" value="" placeholder="Saisissez une expression">
         </section>
 
@@ -169,7 +169,7 @@
         </div>
 
         <button class="primary" id="calculateBtn">
-            احسب الآن
+            Calculez maintenant
         </button>
 
         <p class="hint">
@@ -178,7 +178,7 @@
         </p>
 
         <section id="result" class="result" aria-live="polite">
-            <h3 id="resultTitle">النتيجة</h3>
+            <h3 id="resultTitle">la resultat</h3>
             <div id="answer" class="answer"></div>
             <div id="steps"></div>
         </section>
@@ -248,7 +248,7 @@
 
             resultBox.classList.add("show");
             document.getElementById("resultTitle").textContent = "النتيجة";
-            answerBox.textContent = "جارٍ الحساب...";
+            answerBox.textContent = "Calcul en cours...";
             stepsBox.textContent = "";
 
             try {
@@ -263,7 +263,7 @@
                 const result = await response.json();
 
                 if (!response.ok || !result.success) {
-                    throw new Error(result.error || "حدث خطأ.");
+                    throw new Error(result.error || "Une erreur est survenue.");
                 }
 
                 document.getElementById("resultTitle").textContent =
@@ -272,7 +272,7 @@
                 answerBox.textContent = Array.isArray(result.answer)
                     ? result.answer.length
                         ? result.answer.map(s => "x = " + s).join(" ، ")
-                        : "لا توجد حلول"
+                        : "Il n'y a pas de solutions."
                     : result.answer;
 
                 result.steps.forEach(step => {
@@ -282,10 +282,10 @@
                 });
 
             } catch (error) {
-                answerBox.textContent = "تعذّر الحساب";
+                answerBox.textContent = "Impossibilité du calcul";
                 stepsBox.textContent =
                     error.message +
-                    " تأكد من تشغيل خادم Python.";
+                    " Assurez-vous que le serveur est en cours d'exécution. Python.";
             }
         }
 
