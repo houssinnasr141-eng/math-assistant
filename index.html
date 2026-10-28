@@ -1,0 +1,296 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Math AI</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 25px 15px;
+            font-family: Arial, sans-serif;
+            background: #101827;
+            color: white;
+        }
+
+        h1, .subtitle {
+            text-align: center;
+        }
+
+        .subtitle {
+            color: #cbd5e1;
+        }
+
+        .calculator {
+            max-width: 600px;
+            margin: 30px auto;
+            padding: 25px;
+            background: #1e293b;
+            border-radius: 16px;
+        }
+
+        .tabs, .buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 9px;
+            margin: 15px 0;
+        }
+
+        button {
+            padding: 12px;
+            border: 0;
+            border-radius: 8px;
+            background: #334155;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #475569;
+        }
+
+        button.active, .primary {
+            background: #2563eb;
+        }
+
+        label {
+            display: block;
+            margin: 14px 0 7px;
+        }
+
+        input {
+            width: 100%;
+            padding: 13px;
+            border: 1px solid #475569;
+            border-radius: 8px;
+            background: #0f172a;
+            color: white;
+            font-size: 17px;
+            direction: ltr;
+        }
+
+        .primary {
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        .result {
+            display: none;
+            margin-top: 22px;
+            padding: 17px;
+            border-radius: 10px;
+            background: #0f172a;
+        }
+
+        .result.show {
+            display: block;
+        }
+
+        .answer {
+            margin: 12px 0;
+            color: #93c5fd;
+            font-size: 23px;
+            overflow-wrap: anywhere;
+            direction: ltr;
+            text-align: left;
+        }
+
+        #steps {
+            line-height: 1.9;
+            overflow-wrap: anywhere;
+        }
+
+        .hint {
+            color: #cbd5e1;
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Math AI ∑</h1>
+    <p class="subtitle">مساعدك في فهم الرياضيات</p>
+
+    <main class="calculator">
+
+        <h2>المحرر الرياضي</h2>
+
+        <div class="tabs">
+            <button class="active" data-mode="equation">
+                حل معادلة
+            </button>
+
+            <button data-mode="factor">
+                تحليل
+            </button>
+
+            <button data-mode="expand">
+                نشر
+            </button>
+        </div>
+
+        <section id="equationFields">
+            <label for="left">الطرف الأيسر</label>
+            <input id="left" value="5*x - 3">
+
+            <label for="right">الطرف الأيمن</label>
+            <input id="right" value="x + 1/2">
+        </section>
+
+        <section id="expressionFields" hidden>
+            <label for="expression">التعبير الرياضي</label>
+            <input id="expression" value="x^2 - 9">
+        </section>
+
+        <div class="buttons">
+            <button onclick="insertText('sqrt(')">√</button>
+            <button onclick="insertText('^2')">x²</button>
+            <button onclick="insertText('x')">x</button>
+            <button onclick="insertText('+')">+</button>
+            <button onclick="insertText('-')">−</button>
+            <button onclick="insertText('*')">×</button>
+            <button onclick="insertText('/')">÷</button>
+            <button onclick="insertText('(')">(</button>
+            <button onclick="insertText(')')">)</button>
+        </div>
+
+        <button class="primary" id="calculateBtn">
+            احسب الآن
+        </button>
+
+        <p class="hint">
+            اكتب الضرب باستخدام *، مثل 5*x.
+            يمكنك استخدام ^ للأسس و sqrt(25) للجذر.
+        </p>
+
+        <section id="result" class="result" aria-live="polite">
+            <h3 id="resultTitle">النتيجة</h3>
+            <div id="answer" class="answer"></div>
+            <div id="steps"></div>
+        </section>
+
+    </main>
+
+    <script>
+        let mode = "equation";
+
+        const tabs = document.querySelectorAll("[data-mode]");
+
+        tabs.forEach(button => {
+            button.addEventListener("click", () => {
+                mode = button.dataset.mode;
+
+                tabs.forEach(tab => {
+                    tab.classList.toggle(
+                        "active",
+                        tab.dataset.mode === mode
+                    );
+                });
+
+                document.getElementById("equationFields").hidden =
+                    mode !== "equation";
+
+                document.getElementById("expressionFields").hidden =
+                    mode === "equation";
+
+                document.getElementById("result").classList.remove("show");
+
+                if (mode === "factor") {
+                    document.getElementById("expression").value = "x^2 - 9";
+                }
+
+                if (mode === "expand") {
+                    document.getElementById("expression").value = "(x + 2)^2";
+                }
+            });
+        });
+
+        function insertText(text) {
+            const input = mode === "equation"
+                ? document.getElementById("left")
+                : document.getElementById("expression");
+
+            const start = input.selectionStart;
+            const end = input.selectionEnd;
+
+            input.setRangeText(text, start, end, "end");
+            input.focus();
+        }
+
+        async function calculate() {
+            const resultBox = document.getElementById("result");
+            const answerBox = document.getElementById("answer");
+            const stepsBox = document.getElementById("steps");
+
+            let data = { mode };
+
+            if (mode === "equation") {
+                data.left = document.getElementById("left").value;
+                data.right = document.getElementById("right").value;
+            } else {
+                data.expression =
+                    document.getElementById("expression").value;
+            }
+
+            resultBox.classList.add("show");
+            document.getElementById("resultTitle").textContent = "النتيجة";
+            answerBox.textContent = "جارٍ الحساب...";
+            stepsBox.textContent = "";
+
+            try {
+                const response = await fetch("/api/calculate", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    throw new Error(result.error || "حدث خطأ.");
+                }
+
+                document.getElementById("resultTitle").textContent =
+                    result.title;
+
+                answerBox.textContent = Array.isArray(result.answer)
+                    ? result.answer.length
+                        ? result.answer.map(s => "x = " + s).join(" ، ")
+                        : "لا توجد حلول"
+                    : result.answer;
+
+                result.steps.forEach(step => {
+                    const line = document.createElement("p");
+                    line.textContent = step;
+                    stepsBox.appendChild(line);
+                });
+
+            } catch (error) {
+                answerBox.textContent = "تعذّر الحساب";
+                stepsBox.textContent =
+                    error.message +
+                    " تأكد من تشغيل خادم Python.";
+            }
+        }
+
+        document.getElementById("calculateBtn")
+            .addEventListener("click", calculate);
+    </script>
+
+</body>
+</html>
